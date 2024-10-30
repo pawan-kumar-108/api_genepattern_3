@@ -51,27 +51,26 @@ def generate_image():
         return jsonify({"error": "No file selected for uploading"}), 400
 
     try:
-        data = pd.read_csv(file)
+        data = pd.read_csv(file, chunksize=1000)  # Read the CSV in chunks
 
-        # Create a sample plot using Matplotlib
-        plt.figure(figsize=(8, 6))
-        if data.shape[1] >= 2:  # Ensure at least two columns exist
-            plt.scatter(data.iloc[:, 0], data.iloc[:, 1])
-            plt.xlabel(data.columns[0])
-            plt.ylabel(data.columns[1])
-            plt.title("Sample Scatter Plot")
-        else:
-            plt.text(0.5, 0.5, "Insufficient data for plotting", ha='center')
-
-        # Save the plot to a buffer
         img_buffer = BytesIO()
+        plt.figure(figsize=(8, 6))
+
+        for chunk in data:
+            if chunk.shape[1] >= 2:  # Ensure at least two columns exist
+                plt.scatter(chunk.iloc[:, 0], chunk.iloc[:, 1])
+        
+        plt.xlabel(data.columns[0])
+        plt.ylabel(data.columns[1])
+        plt.title("Sample Scatter Plot")
         plt.savefig(img_buffer, format='png')
-        img_buffer.seek(0)
         plt.close()  # Close the plot to free up memory
 
+        img_buffer.seek(0)
         return send_file(img_buffer, mimetype='image/png')
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
 
 # Route to train a KNN model and return predictions
 @bp.route('/api/predict', methods=['POST'])
