@@ -55,7 +55,7 @@ def generate_image():
 
     try:
         print("Reading CSV file")
-        data = pd.read_csv(file, chunksize=1000)  # Read the CSV in chunks
+        data = pd.read_csv(file)  # Read the entire CSV file
     except pd.errors.ParserError as e:
         print(f"Error parsing CSV file: {str(e)}")
         return jsonify({"error": f"Error parsing CSV file: {str(e)}"}), 500
@@ -68,10 +68,8 @@ def generate_image():
 
     try:
         print("Generating image")
-        for chunk in data:
-            if chunk.shape[1] >= 2:  # Ensure at least two columns exist
-                plt.scatter(chunk.iloc[:, 0], chunk.iloc[:, 1])
-        
+        if data.shape[1] >= 2:  # Ensure at least two columns exist
+            plt.scatter(data.iloc[:, 0], data.iloc[:, 1])
         plt.xlabel(data.columns[0])
         plt.ylabel(data.columns[1])
         plt.title("Sample Scatter Plot")
@@ -84,7 +82,6 @@ def generate_image():
     img_buffer.seek(0)
     print("Returning image")
     return send_file(img_buffer, mimetype='image/png')
-
 
 # Route to train a KNN model and return predictions
 @bp.route('/api/predict', methods=['POST'])
