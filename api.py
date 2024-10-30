@@ -43,24 +43,31 @@ def upload_csv():
 # route to generate an image with a Matplotlib plot from CSV data
 @bp.route('/api/generateImage', methods=['POST'])
 def generate_image():
+    print("Received request for /api/generateImage")
     if 'file' not in request.files:
+        print("No file part in the request")
         return jsonify({"error": "No file part in the request"}), 400
 
     file = request.files['file']
     if file.filename == '':
+        print("No file selected for uploading")
         return jsonify({"error": "No file selected for uploading"}), 400
 
     try:
+        print("Reading CSV file")
         data = pd.read_csv(file, chunksize=1000)  # Read the CSV in chunks
     except pd.errors.ParserError as e:
+        print(f"Error parsing CSV file: {str(e)}")
         return jsonify({"error": f"Error parsing CSV file: {str(e)}"}), 500
     except Exception as e:
+        print(f"Unexpected error: {str(e)}")
         return jsonify({"error": f"Unexpected error: {str(e)}"}), 500
 
     img_buffer = BytesIO()
     plt.figure(figsize=(8, 6))
 
     try:
+        print("Generating image")
         for chunk in data:
             if chunk.shape[1] >= 2:  # Ensure at least two columns exist
                 plt.scatter(chunk.iloc[:, 0], chunk.iloc[:, 1])
@@ -71,9 +78,11 @@ def generate_image():
         plt.savefig(img_buffer, format='png')
         plt.close()  # Close the plot to free up memory
     except Exception as e:
+        print(f"Error generating image: {str(e)}")
         return jsonify({"error": f"Error generating image: {str(e)}"}), 500
 
     img_buffer.seek(0)
+    print("Returning image")
     return send_file(img_buffer, mimetype='image/png')
 
 
