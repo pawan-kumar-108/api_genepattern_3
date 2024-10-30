@@ -55,7 +55,7 @@ def generate_image():
 
     try:
         print("Reading CSV file")
-        data = pd.read_csv(file)  # Read the entire CSV file
+        data = pd.read_csv(file, nrows=1000)  # Read only the first 1000 rows
     except pd.errors.ParserError as e:
         print(f"Error parsing CSV file: {str(e)}")
         return jsonify({"error": f"Error parsing CSV file: {str(e)}"}), 500
