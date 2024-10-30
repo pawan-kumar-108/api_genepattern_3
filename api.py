@@ -52,10 +52,15 @@ def generate_image():
 
     try:
         data = pd.read_csv(file, chunksize=1000)  # Read the CSV in chunks
+    except pd.errors.ParserError as e:
+        return jsonify({"error": f"Error parsing CSV file: {str(e)}"}), 500
+    except Exception as e:
+        return jsonify({"error": f"Unexpected error: {str(e)}"}), 500
 
-        img_buffer = BytesIO()
-        plt.figure(figsize=(8, 6))
+    img_buffer = BytesIO()
+    plt.figure(figsize=(8, 6))
 
+    try:
         for chunk in data:
             if chunk.shape[1] >= 2:  # Ensure at least two columns exist
                 plt.scatter(chunk.iloc[:, 0], chunk.iloc[:, 1])
@@ -65,11 +70,11 @@ def generate_image():
         plt.title("Sample Scatter Plot")
         plt.savefig(img_buffer, format='png')
         plt.close()  # Close the plot to free up memory
-
-        img_buffer.seek(0)
-        return send_file(img_buffer, mimetype='image/png')
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": f"Error generating image: {str(e)}"}), 500
+
+    img_buffer.seek(0)
+    return send_file(img_buffer, mimetype='image/png')
 
 
 # Route to train a KNN model and return predictions
